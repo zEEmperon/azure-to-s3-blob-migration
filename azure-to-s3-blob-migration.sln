@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "azure-to-s3-blob-migration", "azure-to-s3-blob-migration\azure-to-s3-blob-migration.csproj", "{0151B601-1B14-4A8B-9381-CC6E8C21FEEE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0151B601-1B14-4A8B-9381-CC6E8C21FEEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0151B601-1B14-4A8B-9381-CC6E8C21FEEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0151B601-1B14-4A8B-9381-CC6E8C21FEEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0151B601-1B14-4A8B-9381-CC6E8C21FEEE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
