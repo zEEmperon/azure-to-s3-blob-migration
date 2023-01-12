@@ -10,11 +10,16 @@ static class Program
         var containers = blobClient.GetBlobContainersAsync();
         await foreach (var c in containers)
         {
-            Console.WriteLine(c.Name);
+            Console.WriteLine("Container: " + c.Name);
+            var containerClient = blobClient.GetBlobContainerClient(c.Name);
+            var blobs = containerClient.GetBlobsAsync();
+            await foreach (var b in blobs)
+            {
+                Console.WriteLine("\t" + b.Name);
+            }
         }
-        Console.WriteLine("End");
     }
 
     private static BlobServiceClient GetBlobServiceClient()
-        => new (new Uri("http://127.0.0.1:10000/"));
+        => new ("UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://localhost");
 }
