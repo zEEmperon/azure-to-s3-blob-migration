@@ -4,10 +4,15 @@ namespace azure_to_s3_blob_migration;
 
 static class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         var blobClient = GetBlobServiceClient();
-        Console.WriteLine(blobClient);
+        var containers = blobClient.GetBlobContainersAsync();
+        await foreach (var c in containers)
+        {
+            Console.WriteLine(c.Name);
+        }
+        Console.WriteLine("End");
     }
 
     private static BlobServiceClient GetBlobServiceClient()
