@@ -1,4 +1,5 @@
-﻿using Azure.Storage.Blobs;
+﻿using System.Text.RegularExpressions;
+using Azure.Storage.Blobs;
 
 namespace azure_to_s3_blob_migration;
 
@@ -11,11 +12,26 @@ static class Program
         await foreach (var c in containers)
         {
             Console.WriteLine("Container: " + c.Name);
+
+            var keyPrefix = "";
+            if (c.Name.StartsWith("imports-dev-"))
+            {
+                var rg = new Regex(@"\d*$");
+                var match = rg.Match(c.Name);
+                keyPrefix = match.Value;
+            }
+            
             var containerClient = blobClient.GetBlobContainerClient(c.Name);
             var blobs = containerClient.GetBlobsAsync();
             await foreach (var b in blobs)
             {
-                Console.WriteLine("\t" + b.Name);
+                Console.WriteLine("\tKey = " + b.Name);
+                if (c.Name.StartsWith("imports-dev-"))
+                {
+                    Console.WriteLine("\tNew key = " + keyPrefix + '-' + b.Name);
+                    Console.WriteLine();
+                }
+
             }
         }
     }
