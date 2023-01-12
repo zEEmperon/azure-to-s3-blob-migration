@@ -1,3 +1,9 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿namespace azure_to_s3_blob_migration;
 
-Console.WriteLine("Hello, World!");
+static class Program
+{
+    static void Main(string[] args)
+    {
+        Console.WriteLine("Hello world");
+    }
+}
