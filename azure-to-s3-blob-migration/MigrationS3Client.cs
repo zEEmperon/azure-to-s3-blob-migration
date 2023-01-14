@@ -31,7 +31,7 @@ public class MigrationS3Client
         }
     }
     
-    public async Task PutAsync(string bucketName, string key, BlobDownloadInfo blob,
+    public async Task PutAsync(string bucketName, string key, BlobDownloadResult blob,
         CancellationToken token = default)
     {
         await EnsureBucketExistsAsync(bucketName, token);
@@ -39,8 +39,8 @@ public class MigrationS3Client
         {
             BucketName = bucketName,
             Key = key,
-            InputStream = blob.Content,
-            ContentType = blob.ContentType
+            InputStream = blob.Content.ToStream(),
+            ContentType = blob.Details.ContentType,
         };
         await s3Client.PutObjectAsync(request, token);
     }

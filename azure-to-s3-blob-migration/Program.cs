@@ -17,8 +17,8 @@ static class Program
         
         var cancellationToken = new CancellationToken();
 
-        var importsBucketName = "imports-bucket";
-        var attachmentsBucketName = "attachments-bucket";
+        var importsBucketName = "tfsoassets-imports";
+        var attachmentsBucketName = "tfsoassets-attachments";
 
         var importsBlobContainerName = "imports-dev";
 
@@ -37,28 +37,41 @@ static class Program
         await foreach (var c in azureContainers)
         {
             Console.WriteLine("Container: " + c.Name);
+            Console.WriteLine();
 
             var keyPrefix = "";
+            var targetBucketName = attachmentsBucketName;
+            
             if (c.Name.StartsWith(importsBlobContainerName))
             {
                 var rg = new Regex(@"\d*$");
                 var match = rg.Match(c.Name);
                 keyPrefix = match.Value;
+                targetBucketName = importsBucketName;
             }
             
             var azureContainerClient = azureBlobClient.GetBlobContainerClient(c.Name);
             var azureBlobs = azureContainerClient.GetBlobsAsync();
+            var i = 0;
             await foreach (var b in azureBlobs)
             {
                 var azureSeparateBlobClient = azureContainerClient.GetBlobClient(b.Name);
-                //var downloadedBlobResponse = await azureSeparateBlobClient.DownloadAsync(cancellationToken);
+                var downloadedBlobResponse = await azureSeparateBlobClient.DownloadContentAsync(cancellationToken);
 
-                Console.WriteLine("\tKey = " + b.Name);
+                var key = b.Name;
+                var indent = "   ";
+                
+                Console.WriteLine($"\t{++i}. Key = " + key);
                 if (c.Name.StartsWith("imports-dev-"))
                 {
-                    Console.WriteLine("\tNew key = " + keyPrefix + '-' + b.Name);
-                    Console.WriteLine();
+                    key = $"{keyPrefix}-{b.Name}";
+                    Console.WriteLine($"\t{indent}New key = {key}");
                 }
+                
+                Console.WriteLine($"\t{indent}Uploading to object to Amazon...");
+                await s3Client.PutAsync(targetBucketName, key, downloadedBlobResponse.Value, cancellationToken);
+                Console.WriteLine($"\t{indent}Successfully uploaded");
+                Console.WriteLine();
 
             }
         }
