@@ -1,13 +1,22 @@
 ﻿version: "3.8"
 services:
+    redis:
+        container_name: redis
+        image: "redis:latest"
+        ports:
+            - 6379:6379
+        networks:
+            - backend
     azurite:
-        image: "mcr.microsoft.com/azure-storage/azurite"
         container_name: azurite
+        image: "mcr.microsoft.com/azure-storage/azurite"
         ports:
             - 10000:10000
         command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000
         volumes:
             - c:/azurite:/data
+        networks:
+            - backend
     localstack-s3:
         image: localstack/localstack-full:latest
         container_name: localstack-s3
@@ -23,3 +32,6 @@ services:
 volumes:        
     localstack-data:
         name: localstack-data
+networks:
+    backend:
+        name: backend_network
