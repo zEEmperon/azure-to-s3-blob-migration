@@ -20,6 +20,8 @@ static class Program
         var importsBucketName = "imports-bucket";
         var attachmentsBucketName = "attachments-bucket";
 
+        var importsBlobContainerName = "imports-dev";
+
         Console.WriteLine("Creating Azure and S3 Clients...");
         var azureBlobClient = GetBlobServiceClient();
         var s3Client = GetS3Client();
@@ -37,7 +39,7 @@ static class Program
             Console.WriteLine("Container: " + c.Name);
 
             var keyPrefix = "";
-            if (c.Name.StartsWith("imports-dev-"))
+            if (c.Name.StartsWith(importsBlobContainerName))
             {
                 var rg = new Regex(@"\d*$");
                 var match = rg.Match(c.Name);
