@@ -10,8 +10,16 @@ static class Program
 {
     static async Task Main(string[] args)
     {
+        var cancellationToken = new CancellationToken();
+
+        var importsBucketName = "imports-bucket";
+        var attachmentsBucketName = "attachments-bucket";
+
         var azureBlobClient = GetBlobServiceClient();
         var s3Client = GetS3Client();
+
+        await EnsureBucketExistsAsync(s3Client, importsBucketName, cancellationToken);
+        await EnsureBucketExistsAsync(s3Client, attachmentsBucketName, cancellationToken);
         
         var azureContainers = azureBlobClient.GetBlobContainersAsync();
         await foreach (var c in azureContainers)
@@ -60,5 +68,13 @@ static class Program
         };
 
         return new AmazonS3Client(awsCredentials, s3Config);
+    }
+    
+    private static async Task EnsureBucketExistsAsync(IAmazonS3 s3Client, string bucketName, CancellationToken cancellationToken)
+    {
+        if (!await s3Client.DoesS3BucketExistAsync(bucketName))
+        {
+            await s3Client.PutBucketAsync(bucketName, cancellationToken);
+        }
     }
 }
