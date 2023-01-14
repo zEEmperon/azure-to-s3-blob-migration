@@ -21,9 +21,6 @@ static class Program
         var azureBlobClient = GetBlobServiceClient();
         var s3Client = GetS3Client();
 
-        await EnsureBucketExistsAsync(s3Client, importsBucketName, cancellationToken);
-        await EnsureBucketExistsAsync(s3Client, attachmentsBucketName, cancellationToken);
-        
         var azureContainers = azureBlobClient.GetBlobContainersAsync();
         await foreach (var c in azureContainers)
         {
@@ -58,26 +55,8 @@ static class Program
             ("UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://localhost");
     }
 
-    private static AmazonS3Client GetS3Client()
+    private static MigrationS3Client GetS3Client()
     {
-        var awsCredentials = new BasicAWSCredentials
-            ("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY");
-
-        var s3Config = new AmazonS3Config
-        {
-            ServiceURL = "http://localhost:4566",
-            ForcePathStyle = true,
-            UseHttp = true
-        };
-
-        return new AmazonS3Client(awsCredentials, s3Config);
-    }
-    
-    private static async Task EnsureBucketExistsAsync(IAmazonS3 s3Client, string bucketName, CancellationToken cancellationToken)
-    {
-        if (!await s3Client.DoesS3BucketExistAsync(bucketName))
-        {
-            await s3Client.PutBucketAsync(bucketName, cancellationToken);
-        }
+        return new MigrationS3Client();
     }
 }

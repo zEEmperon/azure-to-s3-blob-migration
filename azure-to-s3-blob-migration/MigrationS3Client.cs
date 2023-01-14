@@ -1,0 +1,62 @@
+using Amazon.Runtime;
+using Amazon.S3;
+using Amazon.S3.Model;
+
+namespace azure_to_s3_blob_migration;
+
+public class MigrationS3Client
+{
+    private IAmazonS3 s3Client;
+    public MigrationS3Client()
+    {
+        var awsCredentials = new BasicAWSCredentials
+            ("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY");
+
+        var s3Config = new AmazonS3Config
+        {
+            ServiceURL = "http://localhost:4566",
+            ForcePathStyle = true,
+            UseHttp = true
+        };
+
+        s3Client = new AmazonS3Client(awsCredentials, s3Config);
+    }
+    
+    private async Task EnsureBucketExistsAsync(string bucketName, CancellationToken cancellationToken)
+    {
+        if (!await s3Client.DoesS3BucketExistAsync(bucketName))
+        {
+            await s3Client.PutBucketAsync(bucketName, cancellationToken);
+        }
+    }
+    
+    public async Task PutAsync(string bucketName, string key, byte[] value,
+        CancellationToken token = default)
+    {
+        await EnsureBucketExistsAsync(bucketName, token);
+        var ms = new MemoryStream(value);
+        var request = new PutObjectRequest
+        {
+            BucketName = bucketName,
+            Key = key,
+            InputStream = ms,
+            
+        };
+        await s3Client.PutObjectAsync(request, token);
+    }
+    
+    public async Task<byte[]> GetAsync(string bucketName, string key, CancellationToken token = default)
+    {
+        await EnsureBucketExistsAsync(bucketName, token);
+        var request = new GetObjectRequest
+        {
+            BucketName = bucketName,
+            Key = key
+        };
+        
+        var response = await s3Client.GetObjectAsync(request, token);
+        var ms = new MemoryStream();
+        await response.ResponseStream.CopyToAsync(ms, token);
+        return ms.ToArray();
+    }
+}
