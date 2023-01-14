@@ -1,4 +1,7 @@
 ﻿using System.Text.RegularExpressions;
+using Amazon.Extensions.NETCore.Setup;
+using Amazon.Runtime;
+using Amazon.S3;
 using Azure.Storage.Blobs;
 
 namespace azure_to_s3_blob_migration;
@@ -7,9 +10,11 @@ static class Program
 {
     static async Task Main(string[] args)
     {
-        var blobClient = GetBlobServiceClient();
-        var containers = blobClient.GetBlobContainersAsync();
-        await foreach (var c in containers)
+        var azureBlobClient = GetBlobServiceClient();
+        var s3Client = GetS3Client();
+        
+        var azureContainers = azureBlobClient.GetBlobContainersAsync();
+        await foreach (var c in azureContainers)
         {
             Console.WriteLine("Container: " + c.Name);
 
@@ -21,9 +26,9 @@ static class Program
                 keyPrefix = match.Value;
             }
             
-            var containerClient = blobClient.GetBlobContainerClient(c.Name);
-            var blobs = containerClient.GetBlobsAsync();
-            await foreach (var b in blobs)
+            var azureContainerClient = azureBlobClient.GetBlobContainerClient(c.Name);
+            var azureBlobs = azureContainerClient.GetBlobsAsync();
+            await foreach (var b in azureBlobs)
             {
                 Console.WriteLine("\tKey = " + b.Name);
                 if (c.Name.StartsWith("imports-dev-"))
@@ -37,5 +42,23 @@ static class Program
     }
 
     private static BlobServiceClient GetBlobServiceClient()
-        => new ("UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://localhost");
+    {
+        return new BlobServiceClient
+            ("UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://localhost");
+    }
+
+    private static AmazonS3Client GetS3Client()
+    {
+        var awsCredentials = new BasicAWSCredentials
+            ("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY");
+
+        var s3Config = new AmazonS3Config
+        {
+            ServiceURL = "http://localhost:9444",
+            ForcePathStyle = true,
+            UseHttp = true
+        };
+
+        return new AmazonS3Client(awsCredentials, s3Config);
+    }
 }
