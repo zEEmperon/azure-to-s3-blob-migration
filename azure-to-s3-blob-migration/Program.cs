@@ -12,16 +12,26 @@ static class Program
     static async Task Main(string[] args)
     {
         //AWSConfigs.LoggingConfig.LogTo = LoggingOptions.Console;
+        Console.WriteLine("Starting script...");
+        Console.WriteLine();
         
         var cancellationToken = new CancellationToken();
 
         var importsBucketName = "imports-bucket";
         var attachmentsBucketName = "attachments-bucket";
 
+        Console.WriteLine("Creating Azure and S3 Clients...");
         var azureBlobClient = GetBlobServiceClient();
         var s3Client = GetS3Client();
-
+        Console.WriteLine("Clients have been created successfully");
+        Console.WriteLine();
+        
+        Console.WriteLine("Getting Azure containers...");
         var azureContainers = azureBlobClient.GetBlobContainersAsync();
+        Console.WriteLine("Containers have been retrieved");
+        Console.WriteLine("Starting traversing containers...");
+        Console.WriteLine();
+        
         await foreach (var c in azureContainers)
         {
             Console.WriteLine("Container: " + c.Name);
@@ -39,7 +49,7 @@ static class Program
             await foreach (var b in azureBlobs)
             {
                 var azureSeparateBlobClient = azureContainerClient.GetBlobClient(b.Name);
-                var downloadedBlobResponse = await azureSeparateBlobClient.DownloadAsync(cancellationToken);
+                //var downloadedBlobResponse = await azureSeparateBlobClient.DownloadAsync(cancellationToken);
 
                 Console.WriteLine("\tKey = " + b.Name);
                 if (c.Name.StartsWith("imports-dev-"))
