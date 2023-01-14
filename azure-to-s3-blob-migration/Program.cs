@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Amazon;
 using Amazon.Extensions.NETCore.Setup;
 using Amazon.Runtime;
 using Amazon.S3;
@@ -10,6 +11,8 @@ static class Program
 {
     static async Task Main(string[] args)
     {
+        //AWSConfigs.LoggingConfig.LogTo = LoggingOptions.Console;
+        
         var cancellationToken = new CancellationToken();
 
         var importsBucketName = "imports-bucket";
