@@ -65,7 +65,7 @@ static class Program
 
         var s3Config = new AmazonS3Config
         {
-            ServiceURL = "http://localhost:9444",
+            ServiceURL = "http://localhost:4566",
             ForcePathStyle = true,
             UseHttp = true
         };
