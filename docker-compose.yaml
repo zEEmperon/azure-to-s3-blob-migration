@@ -1,5 +1,13 @@
 ﻿version: "3.8"
 services:
+    azurite:
+        image: "mcr.microsoft.com/azure-storage/azurite"
+        container_name: azurite
+        ports:
+            - 10000:10000
+        command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000
+        volumes:
+            - c:/azurite:/data
     localstack-s3:
         image: localstack/localstack-full:latest
         container_name: localstack-s3
