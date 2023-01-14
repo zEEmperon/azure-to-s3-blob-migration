@@ -38,6 +38,9 @@ static class Program
             var azureBlobs = azureContainerClient.GetBlobsAsync();
             await foreach (var b in azureBlobs)
             {
+                var azureSeparateBlobClient = azureContainerClient.GetBlobClient(b.Name);
+                var downloadedBlobResponse = await azureSeparateBlobClient.DownloadAsync(cancellationToken);
+
                 Console.WriteLine("\tKey = " + b.Name);
                 if (c.Name.StartsWith("imports-dev-"))
                 {

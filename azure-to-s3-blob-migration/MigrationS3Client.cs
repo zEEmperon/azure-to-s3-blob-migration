@@ -1,6 +1,7 @@
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Azure.Storage.Blobs.Models;
 
 namespace azure_to_s3_blob_migration;
 
@@ -30,17 +31,16 @@ public class MigrationS3Client
         }
     }
     
-    public async Task PutAsync(string bucketName, string key, byte[] value,
+    public async Task PutAsync(string bucketName, string key, BlobDownloadInfo blob,
         CancellationToken token = default)
     {
         await EnsureBucketExistsAsync(bucketName, token);
-        var ms = new MemoryStream(value);
         var request = new PutObjectRequest
         {
             BucketName = bucketName,
             Key = key,
-            InputStream = ms,
-            
+            InputStream = blob.Content,
+            ContentType = blob.ContentType
         };
         await s3Client.PutObjectAsync(request, token);
     }
