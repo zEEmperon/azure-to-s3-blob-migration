@@ -40,8 +40,12 @@ public class MigrationS3Client
             BucketName = bucketName,
             Key = key,
             InputStream = blob.Content.ToStream(),
-            ContentType = blob.Details.ContentType,
+            ContentType = blob.Details.ContentType
         };
+        foreach (var m in blob.Details.Metadata)
+        {
+            request.Metadata.Add(m.Key, m.Value);
+        }
         await s3Client.PutObjectAsync(request, token);
     }
     
