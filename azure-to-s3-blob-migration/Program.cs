@@ -47,7 +47,7 @@ static class Program
             var keyPrefix = "";
             var targetBucketName = attachmentsBucketName;
 
-            if (c.Name.StartsWith(importsBlobContainerName))
+            if (IsImportsContainer(c.Name))
             {
                 var rg = new Regex(@"\d*$");
                 var match = rg.Match(c.Name);
@@ -67,9 +67,9 @@ static class Program
                 var indent = "   ";
 
                 Console.WriteLine($"\t{++i}. Key = " + key);
-                if (c.Name.StartsWith("imports-dev-"))
+                if (IsImportsContainer(c.Name))
                 {
-                    key = $"{keyPrefix}-{b.Name}";
+                    key = $"{keyPrefix}/{b.Name}";
                     Console.WriteLine($"\t{indent}New key = {key}");
                 }
 
@@ -86,7 +86,12 @@ static class Program
     
     private static bool IsAppropriateContainer(string containerName)
     {
-        return containerName == "attachments-dev" || containerName.StartsWith("imports-dev");
+        return containerName == "attachments-dev" || IsImportsContainer(containerName);
+    }
+
+    private static bool IsImportsContainer(string containerName)
+    {
+        return containerName.StartsWith("imports-beta");
     }
 
     private static BlobServiceClient GetBlobServiceClient()
