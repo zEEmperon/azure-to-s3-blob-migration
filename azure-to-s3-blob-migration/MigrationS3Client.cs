@@ -1,3 +1,4 @@
+using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -10,16 +11,17 @@ public class MigrationS3Client
     private IAmazonS3 s3Client;
     public MigrationS3Client()
     {
-        var awsCredentials = new BasicAWSCredentials
-            ("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY");
+        var awsCredentials = new EnvironmentVariablesAWSCredentials();
 
         var s3Config = new AmazonS3Config
         {
-            ServiceURL = "http://localhost:4566",
-            ForcePathStyle = true,
-            UseHttp = true
+            // ServiceURL = "http://localhost:4566",
+            // ForcePathStyle = true,
+            // UseHttp = true
+            RegionEndpoint = RegionEndpoint.EUWest1,
         };
 
+        // s3Client = new AmazonS3Client(s3Config);
         s3Client = new AmazonS3Client(awsCredentials, s3Config);
     }
     
