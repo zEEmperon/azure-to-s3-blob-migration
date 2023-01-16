@@ -14,7 +14,7 @@ static class Program
         //AWSConfigs.LoggingConfig.LogTo = LoggingOptions.Console;
         Console.WriteLine("Starting script...");
         Console.WriteLine();
-        
+
         var cancellationToken = new CancellationToken();
 
         var importsBucketName = "tfsoassets-imports";
@@ -27,21 +27,26 @@ static class Program
         var s3Client = GetS3Client();
         Console.WriteLine("Clients have been created successfully");
         Console.WriteLine();
-        
+
         Console.WriteLine("Getting Azure containers...");
         var azureContainers = azureBlobClient.GetBlobContainersAsync();
         Console.WriteLine("Containers have been retrieved");
         Console.WriteLine("Starting traversing containers...");
         Console.WriteLine();
-        
+
         await foreach (var c in azureContainers)
         {
+            if (!IsAppropriateContainer(c.Name))
+            {
+                continue;
+            }
+
             Console.WriteLine("Container: " + c.Name);
             Console.WriteLine();
 
             var keyPrefix = "";
             var targetBucketName = attachmentsBucketName;
-            
+
             if (c.Name.StartsWith(importsBlobContainerName))
             {
                 var rg = new Regex(@"\d*$");
@@ -49,7 +54,7 @@ static class Program
                 keyPrefix = match.Value;
                 targetBucketName = importsBucketName;
             }
-            
+
             var azureContainerClient = azureBlobClient.GetBlobContainerClient(c.Name);
             var azureBlobs = azureContainerClient.GetBlobsAsync();
             var i = 0;
@@ -60,14 +65,14 @@ static class Program
 
                 var key = b.Name;
                 var indent = "   ";
-                
+
                 Console.WriteLine($"\t{++i}. Key = " + key);
                 if (c.Name.StartsWith("imports-dev-"))
                 {
                     key = $"{keyPrefix}-{b.Name}";
                     Console.WriteLine($"\t{indent}New key = {key}");
                 }
-                
+
                 Console.WriteLine($"\t{indent}Uploading to object to Amazon...");
                 await s3Client.PutAsync(targetBucketName, key, downloadedBlobResponse.Value, cancellationToken);
                 Console.WriteLine($"\t{indent}Successfully uploaded");
@@ -75,6 +80,13 @@ static class Program
 
             }
         }
+
+        Console.WriteLine("End");
+    }
+    
+    private static bool IsAppropriateContainer(string containerName)
+    {
+        return containerName == "attachments-dev" || containerName.StartsWith("imports-dev");
     }
 
     private static BlobServiceClient GetBlobServiceClient()
