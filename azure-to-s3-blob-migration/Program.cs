@@ -1,26 +1,50 @@
 ﻿using System.Text.RegularExpressions;
-using Amazon;
-using Amazon.Extensions.NETCore.Setup;
-using Amazon.Runtime;
-using Amazon.S3;
 using Azure.Storage.Blobs;
 
 namespace azure_to_s3_blob_migration;
 
+public enum Environments { Dev, Prod }
+
+public class Config
+{
+    public string ImportsBucketName { get; set; } = null!;
+    public string AttachmentsBucketName { get; set; } = null!;
+    public string ImportsBlobContainerName { get; set; } = null!;
+    public string AttachmentsBlobContainerName { get; set; } = null!;
+}
+
 static class Program
 {
+    private static Dictionary<Environments, Config> Configs = new Dictionary<Environments, Config>()
+    {
+        {
+            Environments.Dev, new Config()
+            {
+                ImportsBucketName = "tfsoassets-imports-dev",
+                AttachmentsBucketName = "tfsoassets-attachments-dev",
+                ImportsBlobContainerName = "imports-beta",
+                AttachmentsBlobContainerName = "attachments-dev"
+            }
+        },
+        {
+            Environments.Prod, new Config()
+            {
+                ImportsBucketName = "tfsoassets-imports-prod",
+                AttachmentsBucketName = "tfsoassets-attachments-prod",
+                ImportsBlobContainerName = "imports-prod",
+                AttachmentsBlobContainerName = "attachments-prod"
+            }
+        }
+    };
+
+    private static readonly Config CurrentConfig = Configs[Environments.Dev];
+
     static async Task Main(string[] args)
     {
-        //AWSConfigs.LoggingConfig.LogTo = LoggingOptions.Console;
         Console.WriteLine("Starting script...");
         Console.WriteLine();
 
         var cancellationToken = new CancellationToken();
-
-        var importsBucketName = "tfsoassets-imports";
-        var attachmentsBucketName = "tfsoassets-attachments";
-
-        var importsBlobContainerName = "imports-dev";
 
         Console.WriteLine("Creating Azure and S3 Clients...");
         var azureBlobClient = GetBlobServiceClient();
@@ -45,14 +69,14 @@ static class Program
             Console.WriteLine();
 
             var keyPrefix = "";
-            var targetBucketName = attachmentsBucketName;
+            var targetBucketName = CurrentConfig.AttachmentsBucketName;
 
             if (IsImportsContainer(c.Name))
             {
                 var rg = new Regex(@"\d*$");
                 var match = rg.Match(c.Name);
                 keyPrefix = match.Value;
-                targetBucketName = importsBucketName;
+                targetBucketName = CurrentConfig.ImportsBucketName;
             }
 
             var azureContainerClient = azureBlobClient.GetBlobContainerClient(c.Name);
@@ -77,21 +101,20 @@ static class Program
                 await s3Client.PutAsync(targetBucketName, key, downloadedBlobResponse.Value, cancellationToken);
                 Console.WriteLine($"\t{indent}Successfully uploaded");
                 Console.WriteLine();
-
             }
         }
 
         Console.WriteLine("End");
     }
-    
+
     private static bool IsAppropriateContainer(string containerName)
     {
-        return containerName == "attachments-dev" || IsImportsContainer(containerName);
+        return containerName == CurrentConfig.AttachmentsBlobContainerName || IsImportsContainer(containerName);
     }
 
     private static bool IsImportsContainer(string containerName)
     {
-        return containerName.StartsWith("imports-beta");
+        return containerName.StartsWith(CurrentConfig.ImportsBlobContainerName);
     }
 
     private static BlobServiceClient GetBlobServiceClient()
